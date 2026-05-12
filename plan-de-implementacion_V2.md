@@ -1,302 +1,250 @@
-
-# 📐 Plan Maestro de Implementación: MySaveCar
+# 📘 Plan Maestro de Arquitectura e Implementación: MySaveCar
 **Rol:** Tech Lead & Arquitecto de Software Senior  
-**Stack:** Flutter + Dart + Firebase (Auth, Firestore, Storage) + Provider  
+**Stack:** Flutter (Dart) + Firebase (Auth, Firestore, Storage) + Provider  
 **Package ID:** `com.example.myselftcar`  
 **Firebase Project ID:** `dbcrudmyselftcar`  
-**Estado:** Fase de Arquitectura y Planificación (Sin código)
+**Modo de Desarrollo:** MVP (Firestore en Modo Test, sin telemetría, enfoque core-only)
 
 ---
 
-## 🛠️ 1. Herramientas y Entorno de Desarrollo
+## 🏗️ 1. Arquitectura del Proyecto y Entorno
 
-### 🎨 Diseño UI/UX y Gestión de Assets
-- **Figma (Design System):** Crear un repositorio de componentes atómicos (botones, inputs, cards, modales, states) con tokens de diseño para garantizar consistencia visual y acelerar el handoff a Flutter.
-- **Organización de Assets en Proyecto:**
-  - `assets/images/` → Ilustraciones, fondos, logos (formato WebP/AVIF para compresión óptima).
-  - `assets/icons/` → Iconografía SVG (escala sin pérdida de calidad, integrable con `flutter_svg`).
-  - `assets/fonts/` → Familias tipográficas con todos los pesos declarados en `pubspec.yaml`.
-  - `assets/lottie/` → Animaciones para onboarding, estados vacíos, éxito/error y skeletons avanzados.
-  - `assets/config/` → JSON estáticos para términos legales, FAQs, configuración de pasarelas y metadata de la app.
-- **Pipeline de Optimización:** Implementar `flutter_gen` para generación type-safe de rutas de assets. Configurar pre-commit hooks para compresión automática de imágenes y validación de nombres de archivos.
-
-### 🧩 Extensiones Indispensables para VS Code
-| Extensión | Propósito Arquitectónico |
-|-----------|--------------------------|
-| `Flutter` + `Dart` | Soporte oficial, hot reload, debugging, formateo, análisis estático |
-| `Error Lens` | Visualización inline de errores y advertencias sin salir del editor |
-| `Pubspec Assist` | Búsqueda y gestión de paquetes con validación de versiones compatibles |
-| `Firebase Assistant` | Vinculación rápida del proyecto Firebase y despliegue de reglas/índices |
-| `Go Router` | Extensiones de navegación declarativa y validación de rutas |
-| `GitLens` | Trazabilidad de cambios, gestión de ramas, integración con PRs |
-| `Better Comments` | Categorización visual de `TODO`, `FIXME`, `ARCHITECTURE`, `PERF` |
-| `Build Runner` | Ejecución de codegen (`freezed`, `json_serializable`) desde el IDE |
-| `REST Client` | Pruebas de endpoints externos, webhooks y funciones serverless |
-
----
-
-## 📦 2. Gestión de Dependencias (`pubspec.yaml`)
-
-| Categoría | Paquetes | Justificación Técnica |
-|-----------|----------|------------------------|
-| **Core & State** | `provider`, `equatable` | `provider` para inyección y gestión reactiva. `equatable` para comparación eficiente de estados y prevención de rebuilds innecesarios. |
-| **Firebase** | `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `firebase_messaging`, `firebase_analytics`, `firebase_crashlytics` | Stack oficial. Cubre autenticación multi-método, base de datos en tiempo real, almacenamiento multimedia, push notifications, métricas y monitoreo de errores en producción. |
-| **Navegación** | `go_router` | Navegación declarativa, soporte para deeplinks, rutas anidadas, guards de autenticación y manejo de estado de navegación. |
-| **UI & UX** | `cached_network_image`, `flutter_svg`, `skeletonizer`, `shimmer`, `responsive_builder` | Rendimiento gráfico optimizado, placeholders progresivos, adaptación a breakpoints y manejo de estados de carga/error. |
-| **Modelado & Serialización** | `freezed`, `json_serializable`, `json_annotation` | Generación compile-time de modelos inmutables, `copyWith`, factories y mapeo seguro Firestore ↔ Dart. Reduce boilerplate y errores de runtime. |
-| **Utilidades & Cache** | `uuid`, `intl`, `logger`, `shared_preferences`, `connectivity_plus`, `device_info_plus` | IDs locales, formateo de monedas/fechas, logging estructurado, persistencia ligera, detección de red e identificación de dispositivo para analytics/fraud prevention. |
-| **Dev & Calidad** | `build_runner`, `flutter_lints`, `very_good_analysis`, `mockito`, `test` | Estricto linting, codegen, pruebas unitarias/widget/integration y estándares de calidad tipo enterprise. |
-
-*Nota:* Todas las versiones se fijarán mediante lockfile y se validarán en CI antes de cada merge. Se evitarán dependencias no mantenidas o con licencias restrictivas.
-
----
-
-## 🗂️ 3. Arquitectura de Carpetas (Feature-First + Capas Limpias)
-
-Se adopta un enfoque **Feature-First** con separación vertical por dominio, combinado con capas limpias (Data/Domain/Presentation) adaptado a `Provider`. Esto maximiza la cohesión, facilita el escalado paralelo de equipos y aísla la lógica de negocio de la UI.
+### 📂 Estructura de Carpetas (Enfoque *Feature-First* + Provider)
+La estructura prioriza la cohesión por dominio, facilitando el escalado paralelo y el aislamiento de la lógica de negocio. Se separan capas `data`, `domain` (lógica de negocio/contratos) y `presentation` (UI/Providers).
 
 ```
 lib/
 ├── core/
-│   ├── constants/          # Rutas, claves, límites, configuraciones globales
-│   ├── theme/              # ThemeData, paletas, tipografías, componentes base
-│   ├── utils/              # Helpers, formatters, validadores, extensiones
-│   └── errors/             # Excepciones personalizadas, manejo de fallos
+│   ├── constants/          # Rutas, claves de config, límites de UI, mensajes estáticos
+│   ├── theme/              # ThemeData, paleta, tipografía, componentes base
+│   ├── utils/              # Formateadores, validadores, extensiones Dart
+│   └── errors/             # Excepciones custom y manejo de fallos de red/BD
 ├── features/
-│   ├── auth/
-│   ├── catalog/            # Vehículos, insumos, refacciones
-│   ├── marketplace/        # Listados, búsqueda, filtros, favoritos
-│   ├── orders/             # Carrito, checkout, historial de compras/ventas
-│   ├── payments/           # Integraciones pasarelas, estados de pago
-│   ├── logistics/          # Envíos, tracking, direcciones
-│   ├── communication/      # Chat, notificaciones, soporte
-│   └── profile/            # Gestión de cuenta, reputación, configuración
-│       ├── data/
-│       │   ├── datasources/ # Firestore/Storage clients
-│       │   ├── repositories/ # Implementaciones de contratos
-│       │   └── models/      # Clases serializables (DTOs ↔ Entities)
-│       ├── domain/
-│       │   ├── entities/    # Objetos de negocio puros
-│       │   └── usecases/    # Casos de uso (reglas de negocio)
-│       └── presentation/
-│           ├── providers/   # ChangeNotifiers, scoped providers
-│           ├── screens/     # Vistas principales
-│           └── widgets/     # Componentes específicos del feature
+│   ├── auth/               # Login, registro, recuperación, sesión
+│   ├── profile/            # Gestión de cuenta, direcciones, KYC vendedor
+│   ├── marketplace/        # Catálogo, feed, búsqueda, detalle, favoritos
+│   ├── seller_center/      # CRUD de publicaciones, gestión de stock/listings
+│   ├── transactions/       # Carrito, checkout, historial de órdenes
+│   ├── communication/      # Chat en tiempo real, ofertas/negociación
+│   └── admin_ops/          # (MVP ligero) Moderación básica y configuración
+│       ├── data/           # Repositorios, datasources (Firestore/Storage), DTOs
+│       ├── domain/         # Entidades puras, contratos de repositorio, casos de uso
+│       └── presentation/   # Screens, widgets UI, ChangeNotifiers (Providers)
 ├── shared/
-│   ├── routing/            # go_router configuración y redirecciones
-│   ├── services/           # Servicios transversales (analytics, crashlytics)
-│   └── widgets/            # UI reutilizable entre features
-├── firebase_options.dart   # Configuración multiplataforma generada
-└── main.dart               # Entry point, inyección global de providers
+│   ├── routing/            # Configuración `go_router`, guards, deep links
+│   ├── widgets/            # UI transversal (loaders, dialogs, empty states)
+│   └── services/           # Utilidades compartidas (formatter, logger local)
+├── firebase_options.dart   # Configuración multiplataforma auto-generada
+└── main.dart               # Entry point, `MultiProvider` global, inicialización
 ```
 
-**Flujo de Estado con Provider:**
-- Los `ChangeNotifier` se declaran en `presentation/providers/`.
-- Se inyectan con `MultiProvider` o `Provider.value` a nivel de `GoRoute` para limitar el scope y evitar rebuilds globales.
-- La capa `data` expone streams o métodos asíncronos; `Provider` escucha y transforma a UI states (Loading, Success, Error).
-- Se evita acoplar Firestore directamente a la UI; toda interacción pasa por `Repository → UseCase → Provider → Widget`.
-- Se implementa patrón `StateClass` (ej. `LoadingState`, `DataState`, `ErrorState`) para tipado estricto y manejo centralizado de errores.
+### 📦 Gestión de Dependencias (`pubspec.yaml`)
+*Estrategia:* Solo paquetes esenciales para el MVP. Se excluye explícitamente cualquier SDK de telemetría, analytics o crash reporting para cumplir con la restricción de ligereza.
+
+| Categoría | Paquetes | Justificación Arquitectónica |
+|-----------|----------|------------------------------|
+| **Firebase Core** | `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage` | Stack oficial para autenticación, base de datos en tiempo real y almacenamiento multimedia. |
+| **Gestor de Estado** | `provider`, `equatable` | `provider` para inyección y reactividad ligera. `equatable` para comparación eficiente de estados y prevención de rebuilds innecesarios. |
+| **Navegación** | `go_router` | Rutas declarativas, protección por autenticación, manejo de deep links y transiciones fluidas. |
+| **Modelado & Mapeo** | `freezed`, `json_serializable`, `json_annotation` | Generación compile-time de entidades inmutables, `copyWith`, y mapeo seguro Firestore ↔ Dart. Reduce boilerplate y errores de runtime. |
+| **UI & Assets** | `cached_network_image`, `flutter_svg`, `image_picker`, `path` | Carga optimizada de imágenes, renderizado SVG, selección de medios para Storage, manejo de rutas locales. |
+| **Utilidades Core** | `intl`, `uuid`, `collection`, `flutter_lints` | Formateo de moneda/fechas (MXN), generación de IDs locales, algoritmos de filtrado/paginación, y estándares de calidad de código. |
 
 ---
 
-## 🗃️ 4. Estrategia de Datos y Migración a Firestore
+## 🗃️ 2. Estrategia de Datos (Firestore NoSQL)
 
-La migración de un esquema relacional (PostgreSQL) a Firestore requiere **desnormalización controlada**, **referencias explícitas** y **agrupación por patrones de acceso**. Se priorizan lecturas rápidas, consistencia eventual donde aplique, y reducción de operaciones costosas.
+La migración del esquema relacional (PostgreSQL) a Firestore prioriza **lecturas rápidas**, **desnormalización controlada** y **agrupación por patrones de acceso**. Se eliminan joins complejos embebiendo datos frecuentemente consultados y se usan subcolecciones solo para datos escalables (mensajes, historial).
 
-### 📊 Estructura de Colecciones Principales
-| Dominio Relacional | Colección Firestore | Estrategia NoSQL |
-|-------------------|---------------------|------------------|
-| **Usuarios** | `users/{userId}` | Documento raíz con perfil, roles, métricas (rating, ventas activas). Subcolecciones: `favorites/`, `addresses/`, `notifications/`. |
-| **Catálogo (Vehículos/Repuestos/Insumos)** | `products/{productId}` | Polimorfismo controlado mediante campos `category`, `type`, `brand`, `specs` (mapa flexible). Imágenes referenciadas como array de URLs en Storage. Índices compuestos en `status`, `price`, `sellerId`, `category`. |
-| **Publicaciones/Listados** | Integrado en `products` + `listings_metadata/{listingId}` | Se evita duplicación. `listings_metadata` almacena visibilidad, boosts, estadísticas, y expira automáticamente vía TTL indexado. |
-| **Órdenes/Transacciones** | `orders/{orderId}` | Documento plano con `buyerId`, `sellerId`, `items` (array de snapshots), `total`, `status`, `timestamps`. Desnormalización de `sellerName`/`buyerAvatar` para evitar joins en listados. |
-| **Pagos** | `payments/{paymentId}` | Colección raíz para auditoría. Vinculada vía `orderId`. Almacena `provider`, `transactionId`, `status`, `receiptUrl`. Lecturas aisladas para conciliación. |
-| **Logística** | `shipments/{shipmentId}` | Vinculado a `orderId`. Campos: `carrier`, `trackingCode`, `status`, `estimatedDelivery`, `addressSnapshot`. Subcolección `tracking_events/` para historial. |
-| **Comunicación** | `conversations/{conversationId}` → `messages/{messageId}` | Patrón chat optimizado: `conversations` guarda metadatos y `lastMessage`. `messages` es subcolección paginada (20 doc/req). Índices en `createdAt`, `readBy`. |
-| **Operaciones/Admin** | `system_config/`, `reports/`, `audit_logs/` | Documentación de reglas de negocio, logs de moderación, métricas agregadas. Acceso restringido vía Firebase Custom Claims. |
+### 🔄 Mapeo Dominal: SQL → Firestore
 
-### 📉 Optimización de Costos, Índices y Seguridad
-- **Paginación estricta:** Uso de `limit()` + `startAfterDocument()` en listados. Evitar `get()` recursivos o `where` sin índices compuestos declarados.
-- **Subcolecciones anidadas máximo 2 niveles:** `conversations/messages` o `orders/tracking` son aceptables; evitar 3+ niveles para no disparar costos de lectura.
-- **Contadores distribuidos:** Para métricas altas (vistas, likes, ventas totales) usar el patrón de contadores distribuidos de Firestore o Cloud Functions para agregación asíncrona.
-- **Caching inteligente:** `Provider` + `shared_preferences` para datos estáticos. Firestore offline cache activado por defecto en móvil. Sincronización en cola al recuperar conectividad.
-- **Índices compuestos:** Definir en `firestore.indexes.json` antes de desarrollo para evitar `FAILED_PRECONDITION` en producción. Validar con emulador local.
-- **Reglas de seguridad:** Estructura basada en `request.auth.uid`, `resource.data.sellerId == request.auth.uid`, y validación de tipos/tamaños. Validar uploads de Storage con MIME y tamaño máximo. Separar reglas por colección con `match` explícito.
+| Dominio Relacional | Colección Firestore | Estrategia NoSQL & Optimización |
+|-------------------|---------------------|----------------------------------|
+| **Usuarios & Sesiones** | `users/{userId}` | Documento único con `email`, `rol`, `avatar_url`, `verificado`. Subcolección `addresses/` para direcciones. Datos de sesión se delegan a Firebase Auth; `push_tokens` se almacenan en un array dentro del doc para notificaciones (cuando se habiliten). |
+| **Perfiles Vendedor** | `sellers/{sellerId}` | Vinculado por `userId`. Contiene `tipo_negocio`, `rfc`, `calificacion_avg`, `total_ventas`, `kyc_estado`. Para el feed, se **desnormaliza** `seller_name` y `seller_avatar` en `listings` para evitar lecturas cruzadas. |
+| **Catálogo Técnico** | `vehicles/{vehicleId}` & `products/{productId}` | `vehicles`: ficha técnica estática (VIN, marca, modelo, año, specs). `products`: refacciones/insumos con `marca`, `numero_parte`, `compatibilidades` (array de mapas), `dimensiones`. Actúan como catálogos maestros; no se replican en cada listing. |
+| **Publicaciones (Listings)** | `listings/{listingId}` | **Colección central de lectura.** Contiene: `seller_id`, `seller_snapshot` (nombre/avatar), `vehiculo_ref` o `producto_ref` + `specs_snapshot`, `precio`, `estado`, `visitas`, `imagenes_urls` (array), `ubicacion`, `timestamps`. Índices compuestos en `estado`, `tipo`, `precio`, `creado_en`. |
+| **Carrito & Favoritos** | `cart/{userId}` & `favorites/{userId}` | Documentos raíz por usuario. `cart` contiene array de `items_carrito` con `listing_ref`, `cantidad`, `precio_snapshot`. `favorites` es mapa/set de `listingId` para `O(1)` lookup. Se sincroniza con cache local para modo offline. |
+| **Órdenes & Transacciones** | `orders/{orderId}` | Documento plano con `buyer_id`, `direccion_snapshot`, `subtotal`, `descuento`, `total`, `estado`, `items_array` (cada item lleva `seller_id`, `listing_title`, `precio_unitario`, `estado_envio`). **Inmutabilidad:** Una vez creado, el precio y los items no cambian. Reflejo exacto del momento del checkout. |
+| **Chat & Comunicación** | `conversations/{chatId}` → `messages/{msgId}` | `conversations` almacena `participants`, `last_message`, `last_sender`, `unread_counts`, `listing_ref`. Subcolección `messages` paginada (20 docs/consulta) con `remitente_id`, `contenido`, `adjunto_url`, `leido`, `timestamp`. Streams escalables y económicos. |
+| **Ofertas & Negociación** | `offers/{offerId}` | Colección independiente vinculada a `listingId` y `buyerId`. Contiene `monto_oferta`, `contraoferta`, `estado`, `expira_en`. Se indexa por `listingId` para que el vendedor vea ofertas activas sin leer el chat. |
 
----
-
-## 🗺️ 5. Hoja de Ruta de Implementación (Fase 1 a 7 - Detallada)
-
-### 🔹 FASE 1: Cimientos y Configuración del Entorno
-- **Objetivo:** Inicializar proyecto multiplataforma, configurar estándares y conectar Firebase.
-- **Actividades Clave:**
-  - Crear proyecto Flutter con `flutter create --org com.example --project-name myselftcar`
-  - Configurar `firebase_options.dart` para iOS, Android y Web
-  - Implementar estructura de carpetas (Feature-First)
-  - Configurar `very_good_analysis`, formateo automático y hooks de pre-commit
-  - Definir `ThemeData`, tokens de diseño y sistema de tipografía
-  - Configurar `go_router` base con rutas placeholder y guards vacíos
-  - Configurar CI básico (lint, format, test dry-run)
-- **Entregables:** App compilando sin warnings, Firebase inicializado, estructura de carpetas validada, tema global aplicado, pipeline CI activo.
-- **Consideraciones Técnicas:** Evitar hardcodear IDs. Usar variables de entorno para configuración sensible. Validar que `flutter doctor` pase en todas las plataformas objetivo.
-- **Criterios de Aceptación:** Compilación exitosa en iOS/Android/Web. Firebase console muestra dispositivos conectados. Linting y formateo pasan al 100%.
-
-### 🔹 FASE 2: Autenticación, Perfiles y Seguridad
-- **Objetivo:** Implementar flujo de acceso seguro, gestión de sesión y estructura de perfiles.
-- **Actividades Clave:**
-  - Configurar `firebase_auth` (Email/Password, Google, Apple)
-  - Implementar `AuthProvider` con estados: `Unauthenticated`, `Loading`, `Authenticated`, `Error`
-  - Crear pantallas de Login, Registro, Recuperación de contraseña y Onboarding
-  - Implementar persistencia de sesión y manejo de refresh tokens
-  - Diseñar estructura de perfil básico (nombre, avatar, rol, fecha registro)
-  - Preparar borrador de reglas de Firestore para acceso por rol
-  - Configurar `firebase_crashlytics` y `analytics` para tracking de flujos de auth
-- **Entregables:** Flujo completo de autenticación funcional, proveedor de sesión reactivo, perfiles creados/leídos, reglas de seguridad base, monitoreo activo.
-- **Consideraciones Técnicas:** Validar emails en cliente y servidor. Usar `custom claims` para roles (buyer, seller, admin). Evitar almacenar datos sensibles en `shared_preferences`.
-- **Criterios de Aceptación:** Login/logout sin pérdida de estado. Recuperación de contraseña funcional. Sesión persistente tras reinicio. Reglas bloquean accesos anónimos a colecciones protegidas.
-
-### 🔹 FASE 3: Arquitectura de Estado y UI Core
-- **Objetivo:** Establecer patrones de estado responsivos, navegación declarativa y componentes reutilizables.
-- **Actividades Clave:**
-  - Implementar `MultiProvider` en `main.dart` con alcance global y scoped
-  - Crear patrón `StateClass` (Loading, Success, Error, Empty) para todos los providers
-  - Desarrollar componentes core: AppShell, BottomNavigation, SearchBar, FilterDrawer, Skeletons, ErrorBanners
-  - Configurar rutas anidadas con `go_router` y guards de autenticación
-  - Implementar manejo de errores globales (`FlutterError.onError`, `Zone` custom)
-  - Optimizar rebuilds con `Consumer`, `Selector` y `context.watch/select`
-- **Entregables:** Navegación fluida con deep linking, UI responsiva, manejo centralizado de errores, proveedores optimizados, componentes base documentados.
-- **Consideraciones Técnicas:** Limitar scope de providers a features específicos. Usar `Provider.of(context, listen: false)` para acciones sin rebuild. Validar accesibilidad (contraste, tamaños de texto dinámicos).
-- **Criterios de Aceptación:** Transiciones suaves sin jank. Rebuilds localizados. Navegación funciona con/without auth. App escala correctamente en tablets y web.
-
-### 🔹 FASE 4: Catálogo, Marketplace y Búsqueda
-- **Objetivo:** Integrar Firestore para listados, gestión de productos y búsqueda optimizada.
-- **Actividades Clave:**
-  - Modelar `ProductEntity` con `freezed` y mapeo seguro a Firestore
-  - Implementar `ProductRepository` con métodos: `getPaginated`, `getById`, `create`, `update`, `delete`
-  - Configurar paginación con `limit` + `startAfterDocument`
-  - Desarrollar filtros avanzados (precio, categoría, ubicación, estado) usando índices compuestos
-  - Integrar `firebase_storage` para subida/optimización de imágenes (comprimir antes de upload)
-  - Implementar caché local de listados frecuentemente accedidos
-  - Crear pantallas: Home, Category, ProductDetail, SellerProfile, Favorites
-- **Entregables:** Marketplace funcional con paginación, filtros, subida de imágenes, detalle de producto, favoritos, caché offline.
-- **Consideraciones Técnicas:** Validar tamaños de imagen en cliente. Usar `FieldValue.serverTimestamp()` para ordenamiento. Indexar campos de filtro antes de deploy. Evitar `arrayContains` con +10 elementos.
-- **Criterios de Aceptación:** Listados cargan en <2s en 3G. Filtros responden sin timeout. Imágenes se comprimen y suben correctamente. Modo offline muestra caché y sincroniza al reconectar.
-
-### 🔹 FASE 5: Transacciones, Órdenes y Pagos
-- **Objetivo:** Implementar flujo de compra/venta, gestión de órdenes y conciliación de pagos.
-- **Actividades Clave:**
-  - Diseñar entidad `Order` con estado inmutable (`pending`, `paid`, `shipped`, `completed`, `cancelled`)
-  - Implementar carrito temporal (local) y persistencia de checkout
-  - Integrar pasarela de pago en modo sandbox (simulación vía Cloud Functions o SDK oficial)
-  - Crear `PaymentRepository` para registro de transacciones y recibos
-  - Implementar historial de órdenes para compradores y vendedores
-  - Configurar reglas de transacción (idempotencia, prevención de doble cobro)
-  - Desarrollar pantallas: Cart, Checkout, OrderConfirmation, OrderHistory, OrderDetail
-- **Entregables:** Flujo de compra completo, registro de pagos, historial de órdenes, conciliación básica, UI de seguimiento.
-- **Consideraciones Técnicas:** Usar `runTransaction` para actualizaciones atómicas de stock/pago. Validar precios en servidor antes de confirmar. Nunca confiar en precios calculados en cliente.
-- **Criterios de Aceptación:** Órdenes se crean sin inconsistencias. Estados se actualizan correctamente. Historial refleja actividad real. Sandbox de pago procesa sin errores.
-
-### 🔹 FASE 6: Logística, Comunicación y Notificaciones
-- **Objetivo:** Implementar tracking de envíos, chat en tiempo real y sistema de notificaciones push.
-- **Actividades Clave:**
-  - Diseñar colección `shipments` con subcolección `tracking_events`
-  - Implementar `ShipmentProvider` con actualización en tiempo real vía streams
-  - Crear sistema de chat: `conversations` + `messages` (paginado, read receipts)
-  - Configurar `firebase_messaging` para notificaciones push (FCM)
-  - Implementar lógica de notificaciones: nuevos mensajes, actualizaciones de orden, promociones
-  - Desarrollar pantallas: Tracking, ChatList, ChatRoom, NotificationCenter
-  - Configurar manejo de notificaciones en background/terminated state
-- **Entregables:** Tracking en tiempo real, chat funcional con historial, push notifications configuradas, centro de notificaciones, manejo offline de mensajes.
-- **Consideraciones Técnicas:** Limitar carga de mensajes a 20 por request. Usar `FieldValue.increment` para contadores no leídos. Validar tokens FCM y rotación. Implementar retry logic para envíos fallidos.
-- **Criterios de Aceptación:** Tracking se actualiza sin latencia perceptible. Chat sincroniza en tiempo real. Push se reciben en foreground/background. Mensajes no se pierden tras reconexión.
-
-### 🔹 FASE 7: QA, Optimización, Reglas y Despliegue
-- **Objetivo:** Validar calidad, optimizar rendimiento, endurecer seguridad y preparar lanzamiento.
-- **Actividades Clave:**
-  - Implementar pruebas unitarias (usecases, repositorios, mappers)
-  - Implementar pruebas widget (UI states, navegación, proveedores)
-  - Implementar pruebas de integración (flujos completos: auth → search → order → payment)
-  - Ejecutar profiling (memory leaks, frame drops, rebuilds excesivos)
-  - Auditar y endurecer reglas de Firestore y Storage
-  - Configurar pipeline CI/CD completo (lint, test, build, deploy a stores)
-  - Generar release notes, configuración de metadatos, firma de binarios
-  - Configurar monitoreo en producción (Crashlytics, Performance, Analytics)
-- **Entregables:** Cobertura de pruebas >70%, reglas de seguridad validadas, pipeline automatizado, binarios firmados, dashboard de monitoreo activo.
-- **Consideraciones Técnicas:** Validar tamaños de APK/IPA. Usar `flutter build --release` con tree-shaking. Probar en dispositivos de baja gama. Revisar políticas de privacidad y términos legales antes del lanzamiento.
-- **Criterios de Aceptación:** 0 crash reports en fase beta. Reglas bloquean accesos no autorizados. Build time <10 min. App pasa store review guidelines. Monitoreo reporta métricas en tiempo real.
+### ⚙️ Reglas de Optimización para MVP
+- **Modo Test Firestore:** Se activará `allow read, write: if request.time < timestamp.date(2025, 12, 31);` para evitar fricción inicial. Se documentará la transición a reglas basadas en `auth.uid` y `resource.data` para producción.
+- **Denormalización estratégica:** `seller_name`, `listing_price_snapshot`, `direccion_envio` se embeben en `orders` para eliminar lecturas adicionales y garantizar auditoría precisa.
+- **Paginación obligatoria:** Todas las consultas de `listings`, `messages` y `orders` usarán `limit(20)` + `startAfterDocument()` para controlar costos de lectura.
+- **Imágenes:** Solo se almacenán URLs en Firestore. La compresión y redimensionado se manejan en cliente antes del upload a Storage para reducir ancho de banda y costos.
 
 ---
 
-## 📋 Próximos Pasos y Validación Arquitectónica
+## 🗺️ 3. Hoja de Ruta de Implementación Completa (End-to-End)
 
-1. **Revisión del Plan:** Validar alcance, fases, dependencias y estrategia de datos con stakeholders.
-2. **Configuración de Emuladores:** Montar entorno local de Firebase (Auth, Firestore, Storage) para desarrollo seguro y pruebas offline.
-3. **Sprint 0 (Setup):** Implementar Fase 1 y 2 con documentación técnica interna y métricas de éxito definidas.
-4. **Iteración por Fases:** Cada fase se entregará con pruebas, documentación y review de arquitectura antes de avanzar.
-5. **Gestión de Deuda Técnica:** Registrar en backlog cualquier decisión temporal (hotfixs, workarounds) para refactor en fase 7.
+### 🔹 Fase 1: Setup y Configuración Inicial
+- **Objetivo:** Preparar entorno local, vincular Firebase y establecer reglas base de desarrollo.
+- **Actividades:**
+  - Inicializar proyecto Flutter con IDs especificados.
+  - Instalar Firebase CLI y ejecutar `flutterfire configure` para generar `firebase_options.dart`.
+  - Configurar Firestore en **Modo de Prueba** (reglas abiertas con fecha de expiración).
+  - Configurar VS Code (linters, formatters, emuladores opcionales).
+  - Estructurar `pubspec.yaml` con dependencias aprobadas y ejecutar `pub get`.
+- **Entregable:** Proyecto compilando en iOS/Android/Web, Firebase vinculado, entorno de desarrollo listo.
 
-✅ **Este documento está listo para ser utilizado como blueprint de desarrollo.** No contiene código ejecutable, cumple con el principio de "planificar antes de implementar", y establece bases escalables para un marketplace automotriz profesional.
+### 🔹 Fase 2: Arquitectura Base y Modelos
+- **Objetivo:** Implementar estructura de carpetas y capas de datos tipadas.
+- **Actividades:**
+  - Crear árbol de directorios `Feature-First`.
+  - Definir `ThemeData`, sistema de diseño y componentes UI base (botones, inputs, loaders).
+  - Implementar entidades con `freezed` + `json_serializable` mapeando el esquema SQL a DTOs Dart.
+  - Configurar `go_router` con rutas placeholder y guards de autenticación vacíos.
+  - Establecer contratos de repositorios (interfaces abstractas) para `Auth`, `Firestore`, `Storage`.
+- **Entregable:** Arquitectura escalable, modelos inmutables tipados, sistema de navegación base, contratos de datos definidos.
 
+### 🔹 Fase 3: Autenticación y Gestión de Estado
+- **Objetivo:** Implementar flujo de acceso seguro y manejo reactivo de sesión.
+- **Actividades:**
+  - Configurar `firebase_auth` (Email/Password, Google).
+  - Crear `AuthProvider` (`ChangeNotifier`) con estados: `Unauthenticated`, `Loading`, `Authenticated`, `Error`.
+  - Desarrollar pantallas de Login, Registro y Recuperación de Contraseña.
+  - Implementar persistencia de sesión y redirección automática post-login.
+  - Validar flujo con `test mode` activo y manejo de errores de red/credenciales.
+- **Entregable:** Auth funcional, provider reactivo estable, flujos de login/register operativos, navegación protegida.
 
+### 🔹 Fase 4: Perfiles y Roles
+- **Objetivo:** Segmentar experiencias por rol (comprador vs vendedor) y gestionar datos personales.
+- **Actividades:**
+  - Crear `ProfileProvider` para CRUD de datos de usuario (`users` collection).
+  - Implementar lógica de `perfiles_vendedor`: activación, carga de datos de negocio, KYC stub.
+  - Desarrollar gestión de direcciones (`direcciones` → subcolección o array embebido según MVP).
+  - Configurar routing condicional post-auth basado en `rol` (comprador → feed, vendedor → dashboard).
+  - Validar persistencia y actualización en tiempo real.
+- **Entregable:** Perfiles editables, segmentación por rol funcional, gestión de direcciones, routing dinámico.
 
+### 🔹 Fase 5: Core del Marketplace (Vendedores)
+- **Objetivo:** Permitir la creación, edición y publicación de listados con gestión multimedia.
+- **Actividades:**
+  - Implementar `SellerProvider` y formularios para crear `listings` (autos o productos).
+  - Integrar `firebase_storage`: selección, compresión previa y upload de imágenes.
+  - Almacenar URLs en `listings/{id}.imagenes` y gestionar estados (`borrador`, `activa`, `pausada`, `vendida`).
+  - Desarrollar pantalla de "Mis Publicaciones" con filtros y acciones rápidas.
+  - Validar validaciones de precio, specs obligatorios y límites de imágenes (MVP: máx 10).
+- **Entregable:** CRUD de publicaciones funcional, upload de imágenes estable, gestión de estados de listado.
 
+### 🔹 Fase 6: Core del Marketplace (Compradores)
+- **Objetivo:** Experiencia de descubrimiento, búsqueda y detalle de producto.
+- **Actividades:**
+  - Desarrollar `MarketplaceProvider` con paginación de `listings` (20 items/scroll).
+  - Implementar feed principal, navegación por categorías y búsqueda textual básica.
+  - Crear filtros avanzados: rango de precio, marca, año, tipo, radio de ubicación.
+  - Diseñar pantalla de `ListingDetail` con galería de imágenes, specs desnormalizados y CTA.
+  - Agregar sistema de favoritos (`favorites/{userId}`) con UI de toggle.
+- **Entregable:** Feed paginado, búsqueda/filtros operativos, detalle completo, favoritos persistentes.
 
+### 🔹 Fase 7: Transacciones
+- **Objetivo:** Flujo de carrito, checkout y generación de órdenes inmutables.
+- **Actividades:**
+  - Implementar `CartProvider` (estado local + sync a Firestore cuando hay auth).
+  - Diseñar carrito UI: ajuste de cantidades, cálculo de subtotal, validación de stock/disponibilidad.
+  - Crear flujo de checkout: selección de dirección, resumen, confirmación.
+  - Implementar creación atómica de `orders` (snapshot de precios/items, asignación de `orderId`, estado `pendiente`).
+  - Desarrollar `OrdersProvider` con historial y detalle por estado (`pendiente` → `pagada` → `enviada`).
+- **Entregable:** Carrito funcional, checkout completo, generación de órdenes con snapshot de datos, historial visible.
 
+### 🔹 Fase 8: Comunicación
+- **Objetivo:** Chat en tiempo real y flujo de ofertas/negociación.
+- **Actividades:**
+  - Crear `ChatProvider` con streams de Firestore para `conversations` y `messages`.
+  - Implementar UI de chat: lista de conversaciones, burbuja de mensajes, indicador de "no leídos".
+  - Configurar paginación inversa de mensajes y scroll automático.
+  - Integrar flujo de `offers`: botón "Hacer oferta", formulario, estado (`enviada`, `contraoferta`, `aceptada`, `rechazada`).
+  - Validar sincronización en tiempo real y manejo de desconexiones/reconexión.
+- **Entregable:** Chat bidireccional en tiempo real, sistema de ofertas funcional, estados sincronizados, UI responsiva.
+
+### 🔹 Fase 9: Testing y QA
+- **Objetivo:** Validar estabilidad, corrección de errores y preparación de código para release.
+- **Actividades:**
+  - Pruebas unitarias: Providers (estados, transiciones), Repositorios (mapeo, manejo de errores), Utilidades.
+  - Pruebas de Widget: Navegación, formularios, loaders, empty states, flujos críticos (auth → checkout).
+  - Pruebas manuales: Offline/online sync, límite de imágenes, paginación, rotación de pantalla, baja conectividad.
+  - Profiling: Detección de rebuilds innecesarios, optimización de `Consumer`/`Selector`, validación de memory leaks.
+  - Corrección de bugs MVP, limpieza de código, eliminación de logs de depuración.
+- **Entregable:** Suite de pruebas funcional, estabilidad validada, rendimiento optimizado, código listo para producción.
+
+### 🔹 Fase 10: Preparación y Despliegue
+- **Objetivo:** Generar artefactos finales, configurar metadatos y desplegar a tiendas/web.
+- **Actividades:**
+  - Configurar íconos (`flutter_launcher_icons`), splash screens, y permisos de plataforma (iOS/Android).
+  - Ejecutar `flutter build` para cada plataforma: App Bundle (Android), Archive (iOS), Web (JS/CSS/HTML).
+  - Configurar metadatos de tiendas: capturas de pantalla, descripciones, políticas de privacidad, categorías.
+  - Preparar checklist de seguridad: revisión de `firebase_options`, eliminación de modo test, configuración de reglas de producción.
+  - Desplegar a Firebase Hosting (Web), Google Play Console, App Store Connect.
+- **Entregable:** Binarios firmados, metadatos completos, apps publicadas en revisión, web desplegada, documentación de release.
 
 ---
 
-PROMPT
+## ✅ Cierre Arquitectónico
+Este plan establece una base **escalable, mantenible y estrictamente enfocada en el MVP**. Cumple con las restricciones críticas (Firestore modo test, cero telemetría, sin código en esta etapa) y traduce fielmente la lógica relacional del DDL a un modelo NoSQL optimizado para lecturas frecuentes y costos controlados.
 
-Rol y Contexto:
-Actúa como un Tech Lead y Arquitecto de Software Senior experto en Flutter, Dart y ecosistemas de Firebase. Tu objetivo es diseñar un plan de implementación maestro para una aplicación móvil multiplataforma llamada "MySaveCar".
+**Próximo paso recomendado:** Validar la estructura de carpetas y la estrategia de desnormalización de `listings` y `orders`. Una vez aprobado, se puede proceder a la Fase 1 con generación de código modular y configuración de emuladores locales.
 
-Descripción del Proyecto:
-"MySaveCar" es un marketplace integral (estilo MercadoLibre) especializado en el sector automotriz. Permitirá la compra y venta de automóviles, insumos vehiculares y refacciones. La base de datos ya está diseñada en PostgreSQL y migraremos su lógica estructural a Firestore.
+----
+---
+----
+-----
 
-Stack Tecnológico:
+# Prompt:
 
-Framework: Flutter (Dart) multiplataforma (iOS, Android, Web).
+**Rol y Contexto:**
+Actúa como un Tech Lead y Arquitecto de Software Senior experto en Flutter, Dart y ecosistemas de Firebase. Tu objetivo es diseñar un plan de implementación maestro y exhaustivo para una aplicación móvil multiplataforma llamada "MySaveCar".
 
-Entorno: VS Code.
+**Descripción del Proyecto:**
+"MySaveCar" es un marketplace integral especializado en el sector automotriz para la compra y venta de automóviles, insumos vehiculares y refacciones. La base de datos original fue diseñada en PostgreSQL (script adjunto al final) y migraremos su lógica estructural a Firestore.
 
-Backend/BaaS: Firebase (Autenticación, Firestore, Storage).
+**Stack Tecnológico:**
 
-Gestor de Estado: Provider.
+* **Framework:** Flutter (Dart) multiplataforma (iOS, Android, Web).
+* **Entorno:** VS Code.
+* **Backend/BaaS:** Firebase (Authentication, Firestore, Storage).
+* **Gestor de Estado:** Provider.
+* **Package Name:** `com.example.myselftcar`
+* **Firebase Project ID:** `dbcrudmyselftcar`
 
-Package Name: com.example.myselftcar
+**Restricciones Técnicas Críticas (Etapa MVP):**
 
-Firebase Project ID: dbcrudmyselftcar
+1. Configurar Firebase Firestore en **Modo de Prueba (Standard/Test Mode)** para agilizar el desarrollo inicial sin bloqueos de reglas de seguridad complejas.
+2. **ESTRICTAMENTE PROHIBIDO implementar Firebase Analytics** u otras herramientas de telemetría. El sistema debe ser ligero y centrado exclusivamente en la funcionalidad core.
+3. **NO ESCRIBAS CÓDIGO TODAVÍA.** En esta etapa, requiero exclusivamente un documento de diseño arquitectónico y planificación en formato Markdown.
 
-Restricción Importante:
-NO ESCRIBAS CÓDIGO TODAVÍA. En esta etapa inicial, requiero exclusivamente un documento de diseño y planificación de alto nivel en formato Markdown, estructurado para un desarrollo escalable, mantenible y óptimo.
+**Entregables Requeridos:**
+Genera el plan de implementación estructurado, abordando los siguientes puntos:
 
-Entregables Requeridos:
-Por favor, genera el plan de implementación abordando secuencialmente los siguientes puntos:
+1. **Arquitectura del Proyecto y Entorno:**
+* Estructura de carpetas escalable bajo el enfoque *Feature-First* en `lib/`.
+* Gestión de dependencias en `pubspec.yaml` (UI, Firebase, Provider, enrutamiento, utilidades).
 
-Herramientas y Entorno de Desarrollo:
 
-Extensiones indispensables para VS Code que optimicen el desarrollo con Flutter y Firebase.
+2. **Estrategia de Datos (Firestore NoSQL):**
+* Basándote en el script SQL, diseña las colecciones y subcolecciones clave en NoSQL. Optimiza para evitar lecturas innecesarias (desnormalización de datos embebidos para Usuarios, Publicaciones, Órdenes y Chats).
 
-Gestión de Dependencias (pubspec.yaml):
 
-Lista clasificada de las dependencias clave que necesitaremos (UI, State Management, Firebase, Routing, Utilidades), justificando brevemente su uso.
+3. **Hoja de Ruta de Implementación Completa (End-to-End):**
+Desglosa el desarrollo en las siguientes fases lógicas y secuenciales, detallando qué se hace en cada una:
+* **Fase 1: Setup y Configuración Inicial:** (Firebase CLI, VS Code, inicialización).
+* **Fase 2: Arquitectura Base y Modelos:** (Estructura de carpetas, clases de modelos en Dart con mapeo JSON).
+* **Fase 3: Autenticación y Gestión de Estado:** (Login/Signup, AuthProvider).
+* **Fase 4: Perfiles y Roles:** (Lógica para separar compradores de vendedores y sus datos).
+* **Fase 5: Core del Marketplace (Vendedores):** (Creación de publicaciones, carga de imágenes a Storage).
+* **Fase 6: Core del Marketplace (Compradores):** (Feed principal, búsqueda, filtrado de categorías y detalle de producto).
+* **Fase 7: Transacciones:** (Carrito de compras, flujo de checkout y generación de órdenes).
+* **Fase 8: Comunicación:** (Chat en tiempo real entre comprador y vendedor usando streams).
+* **Fase 9: Testing y QA:** (Pruebas unitarias de los providers, pruebas de widgets y corrección de bugs del MVP).
+* **Fase 10: Preparación y Despliegue:** (Configuración de íconos, splash screens, compilación de bundles/APKs y despliegue a App Store, Google Play y Web).
 
-Arquitectura de Carpetas (Estructura del Proyecto):
 
-Diseña un árbol de directorios escalable (recomendable enfoque Feature-First o Clean Architecture adaptado a Provider) que separe claramente UI, lógica de negocio, servicios, modelos y rutas.
 
-Estrategia de Datos (Firestore):
+**Contexto de Datos (Esquema SQL de Referencia):**
+A continuación, te proporciono el script DDL original que dicta las reglas de negocio que debemos replicar conceptualmente:
 
-Basándote en el script DDL de PostgreSQL adjunto al final, propón cómo estructurar las colecciones y subcolecciones principales en NoSQL (Firestore) para optimizar lecturas y costos, especialmente para Usuarios, Vehículos, Productos, Publicaciones y Órdenes.
-
-Hoja de Ruta de Implementación (Step-by-Step):
-
-Define las fases del desarrollo paso a paso (Fase 1: Setup y Configuración, Fase 2: Autenticación, Fase 3: Core y UI, Fase 4: Integración de Base de Datos, etc.) para tener un backlog claro.
-
-Contexto de Datos (Esquema SQL de Referencia):
-A continuación, te proporciono el script DDL original que dicta las reglas de negocio y entidades que debemos replicar conceptualmente en la app:
-
-SQL
+```sql
 -- =============================================================
 --  MySaveCar — Script DDL completo (PostgreSQL)
 --  Versión 1.0
@@ -307,12 +255,16 @@ SQL
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- [NOTA: Asume que aquí va todo el script SQL proporcionado anteriormente, con los DOMINIOS 1 al 7: Usuarios, Catálogo, Transacciones, Pagos, Logística, Comunicación y Operaciones]
+-- [NOTA PARA LA IA: Asume que aquí va todo el script SQL proporcionado anteriormente, con los DOMINIOS 1 al 7: Usuarios, Catálogo, Transacciones, Pagos, Logística, Comunicación y Operaciones]
 
 -- =============================================================
 -- FIN DEL SCRIPT
 -- =============================================================
-Espero el plan de implementación detallado en formato Markdown.
 
+```
 
-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-
+Espero el plan maestro detallado.
+
+---
+
+¿Qué te parece esta estructura? Ya abarca desde el "Hola Mundo" hasta el momento en que subes la app a las tiendas. En cuanto estés listo para comenzar con la primera fase de código, solo tienes que decírmelo.
