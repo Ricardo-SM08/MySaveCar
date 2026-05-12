@@ -1,76 +1,3 @@
-PROMPT
-
-Rol y Contexto:
-Actúa como un Tech Lead y Arquitecto de Software Senior experto en Flutter, Dart y ecosistemas de Firebase. Tu objetivo es diseñar un plan de implementación maestro para una aplicación móvil multiplataforma llamada "MySaveCar".
-
-Descripción del Proyecto:
-"MySaveCar" es un marketplace integral (estilo MercadoLibre) especializado en el sector automotriz. Permitirá la compra y venta de automóviles, insumos vehiculares y refacciones. La base de datos ya está diseñada en PostgreSQL y migraremos su lógica estructural a Firestore.
-
-Stack Tecnológico:
-
-Framework: Flutter (Dart) multiplataforma (iOS, Android, Web).
-
-Entorno: VS Code.
-
-Backend/BaaS: Firebase (Autenticación, Firestore, Storage).
-
-Gestor de Estado: Provider.
-
-Package Name: com.example.myselftcar
-
-Firebase Project ID: dbcrudmyselftcar
-
-Restricción Importante:
-NO ESCRIBAS CÓDIGO TODAVÍA. En esta etapa inicial, requiero exclusivamente un documento de diseño y planificación de alto nivel en formato Markdown, estructurado para un desarrollo escalable, mantenible y óptimo.
-
-Entregables Requeridos:
-Por favor, genera el plan de implementación abordando secuencialmente los siguientes puntos:
-
-Herramientas y Entorno de Desarrollo:
-
-Extensiones indispensables para VS Code que optimicen el desarrollo con Flutter y Firebase.
-
-Gestión de Dependencias (pubspec.yaml):
-
-Lista clasificada de las dependencias clave que necesitaremos (UI, State Management, Firebase, Routing, Utilidades), justificando brevemente su uso.
-
-Arquitectura de Carpetas (Estructura del Proyecto):
-
-Diseña un árbol de directorios escalable (recomendable enfoque Feature-First o Clean Architecture adaptado a Provider) que separe claramente UI, lógica de negocio, servicios, modelos y rutas.
-
-Estrategia de Datos (Firestore):
-
-Basándote en el script DDL de PostgreSQL adjunto al final, propón cómo estructurar las colecciones y subcolecciones principales en NoSQL (Firestore) para optimizar lecturas y costos, especialmente para Usuarios, Vehículos, Productos, Publicaciones y Órdenes.
-
-Hoja de Ruta de Implementación (Step-by-Step):
-
-Define las fases del desarrollo paso a paso (Fase 1: Setup y Configuración, Fase 2: Autenticación, Fase 3: Core y UI, Fase 4: Integración de Base de Datos, etc.) para tener un backlog claro.
-
-Contexto de Datos (Esquema SQL de Referencia):
-A continuación, te proporciono el script DDL original que dicta las reglas de negocio y entidades que debemos replicar conceptualmente en la app:
-
-SQL
--- =============================================================
---  MySaveCar — Script DDL completo (PostgreSQL)
---  Versión 1.0
---  Descripción: App móvil de venta de autos, insumos y refacciones
--- =============================================================
-
--- Extensiones necesarias
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- [NOTA: Asume que aquí va todo el script SQL proporcionado anteriormente, con los DOMINIOS 1 al 7: Usuarios, Catálogo, Transacciones, Pagos, Logística, Comunicación y Operaciones]
-
--- =============================================================
--- FIN DEL SCRIPT
--- =============================================================
-Espero el plan de implementación detallado en formato Markdown.
-
-
-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-
-
-
 
 # 📐 Plan Maestro de Implementación: MySaveCar
 **Rol:** Tech Lead & Arquitecto de Software Senior  
@@ -310,4 +237,82 @@ La migración de un esquema relacional (PostgreSQL) a Firestore requiere **desno
 
 ✅ **Este documento está listo para ser utilizado como blueprint de desarrollo.** No contiene código ejecutable, cumple con el principio de "planificar antes de implementar", y establece bases escalables para un marketplace automotriz profesional.
 
-¿Deseas que ajuste algún alcance técnico, profundice en la estrategia de seguridad de Firestore, o preparemos el checklist de validación para el Sprint 0?
+
+
+
+
+
+
+---
+
+PROMPT
+
+Rol y Contexto:
+Actúa como un Tech Lead y Arquitecto de Software Senior experto en Flutter, Dart y ecosistemas de Firebase. Tu objetivo es diseñar un plan de implementación maestro para una aplicación móvil multiplataforma llamada "MySaveCar".
+
+Descripción del Proyecto:
+"MySaveCar" es un marketplace integral (estilo MercadoLibre) especializado en el sector automotriz. Permitirá la compra y venta de automóviles, insumos vehiculares y refacciones. La base de datos ya está diseñada en PostgreSQL y migraremos su lógica estructural a Firestore.
+
+Stack Tecnológico:
+
+Framework: Flutter (Dart) multiplataforma (iOS, Android, Web).
+
+Entorno: VS Code.
+
+Backend/BaaS: Firebase (Autenticación, Firestore, Storage).
+
+Gestor de Estado: Provider.
+
+Package Name: com.example.myselftcar
+
+Firebase Project ID: dbcrudmyselftcar
+
+Restricción Importante:
+NO ESCRIBAS CÓDIGO TODAVÍA. En esta etapa inicial, requiero exclusivamente un documento de diseño y planificación de alto nivel en formato Markdown, estructurado para un desarrollo escalable, mantenible y óptimo.
+
+Entregables Requeridos:
+Por favor, genera el plan de implementación abordando secuencialmente los siguientes puntos:
+
+Herramientas y Entorno de Desarrollo:
+
+Extensiones indispensables para VS Code que optimicen el desarrollo con Flutter y Firebase.
+
+Gestión de Dependencias (pubspec.yaml):
+
+Lista clasificada de las dependencias clave que necesitaremos (UI, State Management, Firebase, Routing, Utilidades), justificando brevemente su uso.
+
+Arquitectura de Carpetas (Estructura del Proyecto):
+
+Diseña un árbol de directorios escalable (recomendable enfoque Feature-First o Clean Architecture adaptado a Provider) que separe claramente UI, lógica de negocio, servicios, modelos y rutas.
+
+Estrategia de Datos (Firestore):
+
+Basándote en el script DDL de PostgreSQL adjunto al final, propón cómo estructurar las colecciones y subcolecciones principales en NoSQL (Firestore) para optimizar lecturas y costos, especialmente para Usuarios, Vehículos, Productos, Publicaciones y Órdenes.
+
+Hoja de Ruta de Implementación (Step-by-Step):
+
+Define las fases del desarrollo paso a paso (Fase 1: Setup y Configuración, Fase 2: Autenticación, Fase 3: Core y UI, Fase 4: Integración de Base de Datos, etc.) para tener un backlog claro.
+
+Contexto de Datos (Esquema SQL de Referencia):
+A continuación, te proporciono el script DDL original que dicta las reglas de negocio y entidades que debemos replicar conceptualmente en la app:
+
+SQL
+-- =============================================================
+--  MySaveCar — Script DDL completo (PostgreSQL)
+--  Versión 1.0
+--  Descripción: App móvil de venta de autos, insumos y refacciones
+-- =============================================================
+
+-- Extensiones necesarias
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- [NOTA: Asume que aquí va todo el script SQL proporcionado anteriormente, con los DOMINIOS 1 al 7: Usuarios, Catálogo, Transacciones, Pagos, Logística, Comunicación y Operaciones]
+
+-- =============================================================
+-- FIN DEL SCRIPT
+-- =============================================================
+Espero el plan de implementación detallado en formato Markdown.
+
+
+/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-/*-
