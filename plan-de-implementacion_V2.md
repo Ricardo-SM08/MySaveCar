@@ -230,49 +230,102 @@ Traducción fiel de los 7 dominios SQL a un modelo **denormalizado, orientado a 
 
 ## 🗺️ 5. Hoja de Ruta de Implementación (End-to-End)
 
-### 🔹 Fase 1: Setup y Configuración
-- **Archivos/Lógica:** `pub get`, `flutterfire configure`, `analysis_options.yaml`, `.env.local` (para project IDs), reglas Firestore `test mode` (`allow read, write: if request.time < timestamp.date(2026, 1, 1);`).
-- **Entregable:** Proyecto compilando, Firebase vinculado, reglas test activas, CI básico (`flutter analyze`, `dart format`).
-
-### 🔹 Fase 2: Arquitectura y Tema
-- **Archivos/Lógica:** `lib/core/theme/app_theme.dart` (definición de tokens Dark/Purple: `primary: #7E3AF2`, `surface: #121214`, `background: #0A0A0C`), `lib/core/constants/`, `assets/images/` con estructura, `shared/widgets/` (skeletons, loaders).
-- **Entregable:** Sistema de diseño tipográfico y cromático definido. Estructura de carpetas validada. Assets listos.
-
-### 🔹 Fase 3: Core y Providers
-- **Archivos/Lógica:** `lib/features/*/data/models/` (DTOs con `freezed` + `json_serializable`), `lib/features/*/domain/entities/`, `lib/features/*/data/repositories/` (interfaces), `main.dart` con `MultiProvider` global inyectando `AuthProvider`, `CartProvider`.
-- **Entregable:** Modelos tipados generados, contratos de repositorios, árbol de proveedores operativo sin lógica Firebase aún.
-
-### 🔹 Fase 4: Autenticación
-- **Archivos/Lógica:** `lib/features/auth/data/datasources/auth_datasource.dart`, `auth_repository.dart`, `auth_provider.dart`. Lógica de `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `signOut`, `userChanges()` stream. Redirects post-auth en `go_router`.
-- **Entregable:** Login/Registro/Logout funcionales. Persistencia de sesión. Routing protegido por `GoRouter` redirect.
-
-### 🔹 Fase 5: Perfiles y Roles
-- **Archivos/Lógica:** `lib/features/profile/` CRUD. `users/{uid}` y `sellers/{uid}` sync. Lógica de `rol` (comprador vs vendedor/particular vs agencia). Gestión de subcolección `addresses/`. KYC stub.
-- **Entregable:** Perfiles editables, segmentación por rol activa, gestión de direcciones, routing dinámico post-auth.
-
-### 🔹 Fase 6: Marketplace (Vendedores)
-- **Archivos/Lógica:** `lib/features/seller_center/`. Formularios para `publicaciones`. `firebase_storage` upload (compressión previa, `putFile`, `getDownloadURL`). Escritura en `listings/` + `listings/{id}/images/`. Validación de precios y estados.
-- **Entregable:** CRUD de publicaciones estable. Upload de imágenes optimizado. Estados (`borrador`, `activa`, `pausada`, `vendida`).
-
-### 🔹 Fase 7: Marketplace (Compradores)
-- **Archivos/Lógica:** `lib/features/marketplace/`. `MarketplaceProvider` con `limit(20)` + `startAfter`. Búsqueda por texto + filtros (precio, tipo, marca). `favorites/` subcolección. `ListingDetail` con datos embebidos y carga de specs.
-- **Entregable:** Feed paginado, búsqueda/filtros operativos, detalle completo, favoritos persistentes.
-
-### 🔹 Fase 8: Transacciones
-- **Archivos/Lógica:** `lib/features/transactions/`. `CartProvider` sync con `carts/{userId}`. Checkout: validación stock, cálculo impuestos/envío, creación atómica de `orders/{orderId}` con snapshot de precios/items. Historial y estados.
-- **Entregable:** Carrito funcional, checkout completo, generación de órdenes inmutables, historial visible.
-
-### 🔹 Fase 9: Comunicación
-- **Archivos/Lógica:** `lib/features/communication/`. `ChatProvider` con `StreamBuilder` en `chats/{chatId}/messages`. Paginación inversa. `offers/` flujo completo. Estados `leido` vs `no leido`.
-- **Entregable:** Chat bidireccional en tiempo real, sistema de ofertas funcional, UI responsiva a streams.
-
-### 🔹 Fase 10: Pulido y Despliegue
-- **Archivos/Lógica:** `flutter_launcher_icons`, splash screens, `analysis_options` strict mode, pruebas unitarias (`test/features/`), profiling de memory/rebuilds. Build: `flutter build appbundle`, `flutter build ipa`, `flutter build web`. Config stores/web hosting.
-- **Entregable:** Binarios firmados, metadatos completos, web desplegada, reglas Firestore preparadas para producción, documentación de release.
+✅ **Estado:** DocumAquí tienes el **Plan Maestro de Implementación completo (Fases 1 a 10)**, estructurado con precisión arquitectónica, mapeo exhaustivo del DDL a Firestore, y formato optimizado para infografía o documentación técnica. **Sin código de UI**, enfocado 100% en arquitectura, datos, providers y lógica de negocio.
 
 ---
 
-✅ **Estado:** Documento arquitectónico completo, listo para transición a desarrollo.  
+## 🔹 FASE 1: Setup y Configuración Inicial
+**🎯 Objetivo:** Cimentar el entorno, vincular Firebase y activar estándares de calidad.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Preparación) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `pubspec.yaml` (dependencias base)<br>`firebase_options.dart` (auto-generado)<br>`analysis_options.yaml` (`very_good_analysis`)<br>`firestore.rules` (modo test) | Activación de `dbcrudmyselftcar`<br>Reglas temporales: `allow read, write: if request.time < timestamp.date(2026, 1, 1);`<br>Storage bucket configurado | Proyecto compilando en 3 plataformas<br>Firebase vinculado<br>CI básico activo (lint + format) | 🛠️ Terminal + 🔥 Firebase + 🛡️ Escudo temporal (Test Mode) |
+
+---
+
+## 🔹 FASE 2: Arquitectura Base y Tema Visual
+**🎯 Objetivo:** Definir estructura escalable, tokens de diseño y assets.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Preparación) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `lib/core/theme/app_theme.dart`<br>`lib/core/constants/`<br>`assets/images|fonts|icons|config/`<br>`shared/widgets/` (skeletons, dialogs) | Estructura de colecciones definida en `firestore.indexes.json`<br>Configuración de TTL para datos expirables | Sistema de diseño Dark/Purple activo<br>Árbol de carpetas validado<br>Assets organizados y referenciados | 🎨 Swatches `#0A0A0C`, `#121214`, `#7E3AF2` + 🌳 Árbol de carpetas limpio |
+
+---
+
+## 🔹 FASE 3: Core, Modelos y MultiProvider
+**🎯 Objetivo:** Implementar capa de datos tipada, inyección y routing.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Core) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `features/*/data/models/` (`freezed` + `json`)<br>`features/*/domain/repositories/` (interfaces)<br>`main.dart` (`MultiProvider` global)<br>`shared/routing/` (`go_router`) | `config_plataforma/{clave}` → Feature flags<br>`roles_permisos/{id}` → RBAC cacheado | Modelos inmutables generados<br>DI configurado<br>Rutas declarativas con guards | 🧩 Bloques `Data → Domain → Presentation` + 🔌 `MultiProvider` inyectado |
+
+---
+
+## 🔹 FASE 4: Autenticación y Gestión de Sesión
+**🎯 Objetivo:** Flujos de acceso, persistencia y redirección por estado.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominio 1) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `auth/datasources/auth_remote.dart`<br>`auth/repository.dart`<br>`auth/provider.dart` (`AuthStatus` enum)<br>Guards en `go_router` | `users/{userId}`<br>Campos: `email`, `rol`, `activo`, `verificado`, `avatar_url`, `creado_en`<br>`dispositivos_sesiones/{deviceId}` (push tokens) | Login/Signup/Logout funcionales<br>Sesión persistente<br>Routing protegido por rol | 🔐 Candado + 👤 Usuario + 🔄 Stream `userChanges()` |
+
+---
+
+## 🔹 FASE 5: Perfiles, Roles y Direcciones
+**🎯 Objetivo:** Segmentación comprador/vendedor/agencia y gestión de ubicaciones.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominio 1) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `profile/provider.dart`<br>`seller_center/onboarding/`<br>Lógica de `kyc_estado` | `sellers/{userId}`<br>Campos: `tipo`, `nombre_negocio`, `rfc`, `calificacion_avg`, `kyc_estado`<br>`users/{userId}/addresses/{addressId}` | Perfiles editables<br>Onboarding vendedor<br>CRUD direcciones + `es_principal` | 🏷️ Tags `comprador`/`vendedor`/`agencia` + 📍 Mapa + 📄 KYC flow |
+
+---
+
+## 🔹 FASE 6: Marketplace (Vendedores)
+**🎯 Objetivo:** CRUD de publicaciones, gestión de catálogo y upload multimedia.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominio 2) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `seller_center/listings/`<br>`storage_service.dart` (compresión + upload)<br>Validación de `publicacion_tipo` y `estado` | `listings/{listingId}`<br>Campos: `titulo`, `precio`, `tipo`, `estado`, `acepta_oferta`<br>Embebidos: `seller_snapshot`, `specs_snapshot`<br>`listings/{id}/images/` (subcolección) | Publicación creada/editada<br>Imágenes en Storage con URLs en Firestore<br>Estados: `borrador → activa → vendida` | 📝 Formulario + 🖼️ Imágenes + 📦 Catálogo `vehiculos`/`productos` |
+
+---
+
+## 🔹 FASE 7: Marketplace (Compradores)
+**🎯 Objetivo:** Feed paginado, búsqueda, filtros y detalle con specs.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominio 2) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `marketplace/provider.dart` (paginación)<br>`marketplace/filters/`<br>`users/{userId}/favorites/{listingId}` | `listings` (lectura principal)<br>Índices compuestos: `(tipo, estado)`, `(precio, creado_en)`<br>`categories/` cacheado<br>`compatibilidades` embebido en specs | Feed infinito estable<br>Búsqueda + filtros avanzados<br>Detalle con galería y compatibilidades | 🔍 Lupa + 📶 Paginación `limit(20)` + ❤️ Favoritos |
+
+---
+
+## 🔹 FASE 8: Transacciones (Carrito, Checkout y Órdenes)
+**🎯 Objetivo:** Gestión de carrito, flujo de pago simulado y creación atómica de órdenes.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominio 3) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `transactions/cart_provider.dart`<br>`transactions/checkout_usecase.dart`<br>Validación de stock y cupones | `carts/{userId}` → `items: [{listingId, precio_snapshot, cantidad}]`<br>`orders/{orderId}` → Inmutable post-creación<br>`items_orden` embebidos en `orders` | Carrito sincronizado<br>Checkout fluido<br>Órdenes con snapshot de precios y estados | 🛒 Carrito + 🧾 Checkout + 🔒 Transacción atómica (`runTransaction`) |
+
+---
+
+## 🔹 FASE 9: Comunicación (Chat y Ofertas)
+**🎯 Objetivo:** Chat en tiempo real, sistema de negociación y gestión de conversaciones.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Dominios 3 & 6) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `communication/chat_provider.dart`<br>`offers/negotiation_usecase.dart`<br>Paginación inversa de mensajes | `chats/{chatId}` → `participants`, `lastMessage`, `unreadCounts`<br>`chats/{id}/messages/{msgId}` → Stream paginado<br>`offers/{offerId}` → `monto_oferta`, `estado`, `expira_en` | Chat bidireccional estable<br>Ofertas con ciclo de vida completo<br>Sincronización offline/online | 💬 Burbujas de chat + ⏳ Stream + 💰 Flujo oferta/counter |
+
+---
+
+## 🔹 FASE 10: Pulido, QA y Despliegue
+**🎯 Objetivo:** Validación final, optimización de rendimiento, builds y preparación de tiendas.
+| 📂 Archivos & Lógica Clave | 🗃️ Mapeo Firestore (Hardening) | ✅ Entregables | 🎨 Sugerencia Visual Infografía |
+|:---|:---|:---|:---|
+| `test/` (unitarias + widget)<br>`flutter_launcher_icons.yaml`<br>Profiling (memory, rebuilds)<br>Builds: `appbundle`, `ipa`, `web` | Reglas de producción (`auth.uid`, `resource.data`)<br>Índices compuestos validados<br>Eliminación de `test mode` | Cobertura >70%<br>Binarios firmados<br>Web desplegada<br>Stores en revisión | 🧪 Tests + 🚀 Build + 📱 Stores + 🛡️ Reglas Production-Ready |
+
+---
+
+## 📐 Resumen de Mapeo Exhaustivo SQL → Firestore (Para Referencia en Infografía)
+| Dominio SQL | Tablas Clave | Colección Firestore | Estrategia NoSQL |
+|:---|:---|:---|:---|
+| **1. Usuarios** | `usuarios`, `perfiles_vendedor`, `direcciones`, `dispositivos_sesiones` | `users/{id}`, `sellers/{id}`, `users/{id}/addresses/`, `users/{id}/devices/` | 1:1 por usuario. Direcciones y dispositivos como subcolecciones escalables. |
+| **2. Catálogo** | `categorias`, `vehiculos`, `productos`, `compatibilidades`, `publicaciones`, `imagenes` | `listings/{id}`, `categories/`, `listings/{id}/images/` | `listings` embebe `seller_snapshot` + `specs_snapshot`. `compatibilidades` como array JSON en producto. |
+| **3. Comercio** | `cupones`, `carritos`, `items_carrito`, `ordenes`, `items_orden`, `ofertas_negociacion`, `favoritos` | `carts/{uid}`, `orders/{id}`, `offers/{id}`, `users/{uid}/favorites/` | Carrito y favoritos por usuario. `orders` inmutable con items embebidos y precios congelados. |
+| **4. Pagos** | `metodos_pago`, `pagos`, `reembolsos`, `facturas`, `comisiones` | `users/{uid}/payment_methods/`, `orders/{id}/payments/` | Subcolecciones por orden/usuario. `comisiones` se calculan vía CF (no cliente). |
+| **5. Logística** | `almacenes`, `envios`, `eventos_rastreo`, `inventario`, `citas_inspeccion` | `sellers/{uid}/warehouses/`, `orders/{id}/shipments/`, `envios/{id}/tracking/` | Tracking como subcolección paginada. Inventario se gestiona con `FieldValue.increment`. |
+| **6. Comunicación** | `resenas`, `mensajes`, `notificaciones`, `reportes_denuncias` | `chats/{id}/messages/`, `users/{uid}/notifications/`, `reports/` | `chats` agrupa hilos. `messages` paginados. `notifications` con TTL. |
+| **7. Admin** | `roles_permisos`, `auditoria`, `busquedas_guardadas`, `config_plataforma` | `config/`, `users/{uid}/saved_searches/`, `admin/` | `config` caché local. `auditoria` vía Cloud Functions. `busquedas` subcolección. |
+
+---
 **Próximo paso:** Validar estructura de carpetas, estrategia de denormalización y scope de providers. Una vez aprobado, se generará el código modular fase por fase comenzando con `lib/core/`, `pubspec.yaml` aplicado y configuración de emuladores Firebase.
 
 
